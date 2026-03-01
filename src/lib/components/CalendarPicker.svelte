@@ -40,7 +40,7 @@
     if (formEl) formEl.requestSubmit();
   }
 
-  function moonEmoji(day: number): string {
+  function moonEmoji(day: number): string | null {
     const mm = String(viewMonth.num).padStart(2, '0');
     const dd = String(day).padStart(2, '0');
     return getMoonPhase(`${viewYear}-${mm}-${dd}`, fullMoonDate).emoji;
@@ -69,10 +69,17 @@
       aria-label="Previous month"
     >&lsaquo;</button>
 
-    <h3 class="text-sm font-semibold text-amber-400 text-center">
-      {viewMonth.name}
-      <span class="text-stone-400 font-normal">{viewYear} DR</span>
-    </h3>
+    <div class="text-center">
+      <select
+        class="bg-transparent text-sm font-semibold text-amber-400 border-none cursor-pointer appearance-none text-center focus:outline-none"
+        onchange={(e) => viewMonthIndex = e.currentTarget.selectedIndex}
+      >
+        {#each FR_MONTHS as month, i}
+          <option value={i} selected={i === viewMonthIndex} class="bg-stone-900 text-stone-100">{month.name}</option>
+        {/each}
+      </select>
+      <span class="text-stone-400 font-normal text-sm">{viewYear} DR</span>
+    </div>
 
     <button
       type="button"
@@ -103,8 +110,8 @@
           ? 'bg-amber-600 text-stone-950 ring-2 ring-amber-400'
           : 'bg-amber-900/30 text-amber-300 hover:bg-amber-900/50 border border-amber-800/50'}"
     >
-      <span class="text-lg">{moonEmoji(1)}</span>
-      <span class="ml-2">{viewMonth.name}</span>
+      {#if moonEmoji(1)}<span class="text-lg">{moonEmoji(1)}</span>{/if}
+      <span class={moonEmoji(1) ? 'ml-2' : ''}>{viewMonth.name}</span>
     </button>
   {:else}
     <!-- Regular month: 3 tenday rows × 10 columns -->
@@ -120,7 +127,7 @@
               : 'bg-stone-800 text-stone-300 hover:bg-stone-700'}"
         >
           <span class="leading-none">{day}</span>
-          <span class="text-[10px] leading-none mt-0.5">{moonEmoji(day)}</span>
+          {#if moonEmoji(day)}<span class="text-[10px] leading-none mt-0.5">{moonEmoji(day)}</span>{/if}
         </button>
       {/each}
     </div>

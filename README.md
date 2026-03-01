@@ -5,27 +5,29 @@ A local web app for managing Trollskull Manor's business operations during a *Wa
 ## Setup
 
 ```sh
-npm install
-npm run dev
+make install      # Install dependencies + Playwright browsers
+make dev          # Start dev server at http://localhost:5173
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+Open [http://localhost:5173](http://localhost:5173). The database is created automatically on first run.
+
+To start with sample data, visit **Settings** and click **Generate Sample Data**.
 
 ## Commands
 
 ```sh
 make dev          # Start dev server
-make test         # Run tests
-make test-watch   # Tests in watch mode (for TDD)
+make test         # Run unit tests
+make test-e2e     # Run end-to-end tests (Playwright)
+make test-all     # Run unit tests, type-check, and e2e tests
+make test-watch   # Unit tests in watch mode (for TDD)
 make check        # Type-check
 make build        # Production build
 make backup       # Back up the database
 make clean        # Reset database (re-created on next dev start)
 ```
 
-## What it does
-
-Tracks finances, equity, loans, assets, and hospitality for a player-run tavern using in-game Forgotten Realms dates.
+## Pages
 
 | Page | Purpose |
 |------|---------|
@@ -34,5 +36,11 @@ Tracks finances, equity, loans, assets, and hospitality for a player-run tavern 
 | Reports | P&L with depreciation and interest memos |
 | Equity | Shareholders, ownership %, NAV, dividends |
 | Loans | Amortization schedules, payment recording |
-| Assets | Capital asset register with straight-line depreciation |
+| Balances | Assets and liabilities overview |
 | Hospitality | Rooms, bookings, checkout, events |
+| Workforce | Staff roster (hire, pay, dismiss) and faction job board |
+| Settings | Seed sample data, clear all data |
+
+## Tech
+
+SvelteKit 2 (Svelte 5), TypeScript, Tailwind CSS v4, better-sqlite3. All data lives in `data/trollskull.db` (SQLite). Dates use the Forgotten Realms (Harptos) calendar.

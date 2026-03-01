@@ -12,6 +12,7 @@
     { href: '/loans',        label: 'Loans'        },
     { href: '/balances',     label: 'Balances'     },
     { href: '/hospitality',  label: 'Hospitality'  },
+    { href: '/workforce',   label: 'Workforce'    },
     { href: '/settings',     label: 'Settings'     },
   ];
 </script>

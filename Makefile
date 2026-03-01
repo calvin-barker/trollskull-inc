@@ -1,16 +1,28 @@
-.PHONY: dev build check preview clean install backup test test-watch
+.PHONY: dev build check preview clean install backup test test-watch test-e2e test-all
 
-# Development
+# Install dependencies and Playwright browsers
+install:
+	npm install
+	npx playwright install chromium
+
+# Start dev server
 dev:
 	npm run dev
 
-# Run tests once
+# Run unit tests once
 test:
 	npm test
 
-# Run tests in watch mode (for TDD)
+# Run unit tests in watch mode (for TDD)
 test-watch:
 	npm run test:watch
+
+# Run end-to-end tests (Playwright)
+test-e2e:
+	npm run test:e2e
+
+# Run unit tests, type-check, and e2e tests
+test-all: test check test-e2e
 
 # Type-check
 check:
@@ -24,11 +36,7 @@ build:
 preview: build
 	npm run preview
 
-# Install dependencies
-install:
-	npm install
-
-# Back up the database (git commit the db file)
+# Back up the database
 backup:
 	@test -f data/trollskull.db || (echo "No database to back up." && exit 1)
 	cp data/trollskull.db data/trollskull.db.bak

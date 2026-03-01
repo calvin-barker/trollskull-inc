@@ -105,6 +105,27 @@ export function seedAll(db: Database.Database) {
       insertBooking.run(rooms[4].id, 'Xanathar\'s Agent', '1492-04-01', '1492-04-03', rooms[4].rate, 0, 'Suspicious guest');
       insertBooking.run(rooms[0].id, 'Mirt the Moneylender', '1492-04-10', '1492-04-15', rooms[0].rate, 0, 'Checking on his investment');
     }
+
+    // Staff
+    const insertStaff = db.prepare(
+      'INSERT INTO staff (name, role, daily_wage, hire_date, notes) VALUES (?, ?, ?, ?, ?)'
+    );
+    insertStaff.run('Lif', 'Barkeep', 2, '1492-01-01', 'Poltergeist');
+    insertStaff.run('Broxley Fairkettle', 'Cook', 3, '1492-01-01', null);
+    insertStaff.run('Fala Lefaliir', 'Herbalist', 2, '1492-01-05', null);
+    insertStaff.run('Yagra Stonefist', 'Mercenary', 5, '1492-03-01', null);
+
+    // Faction postings
+    const insertPosting = db.prepare(
+      'INSERT INTO faction_postings (faction, title, description, reward, status) VALUES (?, ?, ?, ?, ?)'
+    );
+    insertPosting.run('Harpers', 'Investigate the Zhentarim Warehouse', 'Rumours of illicit goods near Dock Ward', 150, 'open');
+    insertPosting.run('Order of the Gauntlet', 'Clear the Rat Nest', 'Giant rats in the sewers beneath the Trades Ward', 50, 'accepted');
+    insertPosting.run('Zhentarim', 'Deliver a Package', 'No questions asked — deliver to the Yawning Portal', 200, 'open');
+    insertPosting.run('Emerald Enclave', 'Tend the City Trees', 'Blighted trees in the City of the Dead need care', 75, 'completed');
+
+    // Set current date to Eleasis 19
+    db.prepare("UPDATE game_state SET value = '1492-11-19' WHERE key = 'current_date'").run();
   });
 
   tx();
@@ -120,9 +141,11 @@ export function clearAll(db: Database.Database) {
     db.exec('DELETE FROM assets');
     db.exec('DELETE FROM shareholders');
     db.exec('DELETE FROM rooms');
+    db.exec('DELETE FROM staff');
+    db.exec('DELETE FROM faction_postings');
     db.exec('DELETE FROM game_state');
     // Re-insert defaults
-    db.exec("INSERT INTO game_state (key, value) VALUES ('current_date', '1492-01-01')");
+    db.exec("INSERT INTO game_state (key, value) VALUES ('current_date', '1492-11-19')");
     db.exec("INSERT INTO game_state (key, value) VALUES ('full_moon_date', '1492-01-01')");
   });
 

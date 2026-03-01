@@ -78,6 +78,27 @@ CREATE TABLE IF NOT EXISTS events (
   description TEXT
 );
 
+CREATE TABLE IF NOT EXISTS staff (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       TEXT    NOT NULL,
+  role       TEXT    NOT NULL,
+  daily_wage INTEGER NOT NULL,
+  hire_date  TEXT    NOT NULL,
+  status     TEXT    NOT NULL DEFAULT 'active',
+  notes      TEXT
+);
+
+CREATE TABLE IF NOT EXISTS faction_postings (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  faction     TEXT    NOT NULL,
+  title       TEXT    NOT NULL,
+  description TEXT,
+  reward      INTEGER NOT NULL DEFAULT 0,
+  deadline    TEXT,
+  status      TEXT    NOT NULL DEFAULT 'open',
+  notes       TEXT
+);
+
 -- Seed initial state (idempotent)
-INSERT OR IGNORE INTO game_state (key, value) VALUES ('current_date', '1492-01-01');
+INSERT OR IGNORE INTO game_state (key, value) VALUES ('current_date', '1492-11-19');
 INSERT OR IGNORE INTO game_state (key, value) VALUES ('full_moon_date', '1492-01-01');

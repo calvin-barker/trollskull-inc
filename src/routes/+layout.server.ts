@@ -12,6 +12,6 @@ export function load() {
     currentDateFormatted: formatDateDR(row.value),
     fullMoonDate,
     moonPhase: moon.phase,
-    moonEmoji: moon.emoji,
+    moonEmoji: moon.emoji ?? '',
   };
 }

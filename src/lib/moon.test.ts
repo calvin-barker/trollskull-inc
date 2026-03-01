@@ -19,29 +19,35 @@ describe('moon constants', () => {
 describe('getMoonPhase', () => {
   const ref = '1492-01-01'; // reference full moon
 
-  it('returns Full Moon on the reference date', () => {
+  it('returns Full Moon on the reference date (day 0)', () => {
     const result = getMoonPhase(ref, ref);
     expect(result.phase).toBe('Full Moon');
     expect(result.dayInCycle).toBe(0);
     expect(result.emoji).toBe('🌕');
   });
 
-  it('returns New Moon ~15 days after reference', () => {
+  it('returns New Moon on day 15', () => {
     const result = getMoonPhase('1492-01-16', ref);
     expect(result.phase).toBe('New Moon');
+    expect(result.emoji).toBe('🌑');
+    expect(result.dayInCycle).toBe(15);
   });
 
-  it('returns Waning Gibbous a few days after full', () => {
+  it('returns Waning Gibbous on day 4', () => {
     const result = getMoonPhase('1492-01-05', ref);
     expect(result.phase).toBe('Waning Gibbous');
+    expect(result.emoji).toBe('🌖');
+  });
+
+  it('returns null phase/emoji on non-phase days', () => {
+    // Day 1 is not a phase day
+    const result = getMoonPhase('1492-01-02', ref);
+    expect(result.phase).toBeNull();
+    expect(result.emoji).toBeNull();
+    expect(result.dayInCycle).toBe(1);
   });
 
   it('wraps around at 30 days (next full moon)', () => {
-    // 30 days from Hammer 1 = Midwinter(1) + 29 more into Alturiak
-    // Actually: Hammer has 30 days (01-01 to 01-30), then Midwinter (02-01), then Alturiak starts at 03-01
-    // Day 30 from 01-01 = 02-01 (Midwinter) which is absDay 30
-    // Day 31 = 03-01 (Alturiak day 1)
-    // So 30 days after 01-01 is 02-01
     const result = getMoonPhase('1492-02-01', ref); // 30 days later
     expect(result.phase).toBe('Full Moon');
     expect(result.dayInCycle).toBe(0);
@@ -51,27 +57,35 @@ describe('getMoonPhase', () => {
     // 365 days = 12 full cycles (360) + 5 remaining
     const result = getMoonPhase('1493-01-01', ref);
     expect(result.dayInCycle).toBe(5);
-    expect(result.phase).toBe('Waning Gibbous');
+    // Day 5 is not a phase position, so null
+    expect(result.phase).toBeNull();
   });
 
   it('works for dates before the reference', () => {
-    // 15 days before full moon should be ~new moon
-    // We need a date before 1492-01-01... use 1491
-    // Actually dateToAbsDay uses 1492 as base, so 1491 dates give negative abs days
-    // Let's use a later reference instead
     const laterRef = '1492-01-16';
     const result = getMoonPhase('1492-01-01', laterRef);
-    // 15 days before ref → dayInCycle = ((-15 % 30) + 30) % 30 = 15
+    // 15 days before ref → dayInCycle = 15
     expect(result.dayInCycle).toBe(15);
     expect(result.phase).toBe('New Moon');
   });
 
-  it('each phase covers ~3-4 days of the cycle', () => {
-    const phases = new Set<string>();
+  it('shows exactly 8 phase days per cycle', () => {
+    let phaseCount = 0;
     for (let d = 0; d < 30; d++) {
       const date = `1492-01-${String(d + 1).padStart(2, '0')}`;
-      phases.add(getMoonPhase(date, ref).phase);
+      const result = getMoonPhase(date, ref);
+      if (result.phase !== null) phaseCount++;
     }
-    expect(phases.size).toBe(8);
+    expect(phaseCount).toBe(8);
+  });
+
+  it('each phase appears exactly once per cycle', () => {
+    const phases: string[] = [];
+    for (let d = 0; d < 30; d++) {
+      const date = `1492-01-${String(d + 1).padStart(2, '0')}`;
+      const result = getMoonPhase(date, ref);
+      if (result.phase !== null) phases.push(result.phase);
+    }
+    expect(new Set(phases).size).toBe(8);
   });
 });

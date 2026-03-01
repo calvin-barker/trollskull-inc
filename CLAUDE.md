@@ -10,13 +10,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev          # Start dev server (http://localhost:5173)
-npm test             # Run tests once (vitest run)
-npm run test:watch   # Run tests in watch mode (vitest)
+npm test             # Run unit tests once (vitest run)
+npm run test:watch   # Unit tests in watch mode (vitest)
+npm run test:e2e     # Run e2e tests (Playwright + Chromium)
 npm run check        # Type-check (svelte-check + tsc)
 npm run build        # Production build
+make test-all        # Unit tests + type-check + e2e tests
+make install         # Install deps + Playwright browsers
 ```
 
-Verify with `npm test && npm run check` before committing. Use TDD: write a failing test first, then implement.
+Verify with `npm test && npm run check` before committing. Run `npm run test:e2e` to validate UI behavior. Use TDD: write a failing test first, then implement.
 
 ## Tech Stack
 
@@ -24,6 +27,7 @@ Verify with `npm test && npm run check` before committing. Use TDD: write a fail
 - **TypeScript** — strict mode
 - **Tailwind CSS v4** — via `@tailwindcss/vite` plugin, no config file
 - **better-sqlite3** — server-side only, SQLite at `data/trollskull.db`
+- **Playwright** — e2e tests in `e2e/` directory, Chromium only
 
 ## Architecture
 
@@ -32,9 +36,10 @@ All database access is server-side via SvelteKit load functions and form actions
 ### Key modules
 
 - `src/lib/server/db.ts` — SQLite singleton (WAL mode, foreign keys ON). Runs `schema.sql` on startup.
-- `src/lib/server/schema.sql` — 9 tables: `game_state`, `transactions`, `shareholders`, `loans`, `loan_payments`, `assets`, `rooms`, `bookings`, `events`
+- `src/lib/server/schema.sql` — 11 tables: `game_state`, `transactions`, `shareholders`, `loans`, `loan_payments`, `assets`, `rooms`, `bookings`, `events`, `staff`, `faction_postings`
 - `src/lib/calendar.ts` — Forgotten Realms (Harptos) calendar utilities. Dates stored as `YYYY-MM-DD` with months 01–17 (12 regular months + 5 festival days). `formatDateDR()`, `advanceDate()`, `daysBetween()`.
 - `src/lib/finance.ts` — Pure financial computation functions: `buildAmortization()`, `computeDepreciation()`, `computeOutstandingDebt()`, `distributeDividend()`, `computePeriodDepreciation()`, `computeAccruedInterest()`. Shared types: `Loan`, `Payment`, `Asset`, `Shareholder`.
+- `src/lib/moon.ts` — Selûne 30-day moon cycle. `getMoonPhase()` returns phase + emoji on 8 exact days per cycle, `null` otherwise.
 
 ### Routes
 
@@ -46,7 +51,10 @@ All database access is server-side via SvelteKit load functions and form actions
 | `/equity` | Shareholders, ownership %, NAV, transfers, dividends |
 | `/loans` | Loan management with amortization, payment recording |
 | `/assets` | Capital asset register with straight-line depreciation |
+| `/balances` | Assets and liabilities overview |
 | `/hospitality` | Rooms, bookings (with overlap check), checkout, events |
+| `/workforce` | Staff roster (hire, pay, dismiss) and faction job board |
+| `/settings` | Seed sample data, clear all data |
 
 ### Data flow
 
