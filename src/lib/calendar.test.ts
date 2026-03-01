@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDateDR, advanceDate, daysBetween, dateBetween, monthOptions, FR_MONTHS } from './calendar';
+import { formatDateDR, advanceDate, daysBetween, dateBetween, monthOptions, FR_MONTHS, dateToAbsDay, absDayToDate, isValidFRDate, buildDateStr } from './calendar';
 
 describe('FR_MONTHS', () => {
   it('has 17 months totaling 365 days', () => {
@@ -132,6 +132,78 @@ describe('dateBetween', () => {
 
   it('returns false for date after range', () => {
     expect(dateBetween('1492-03-01', '1492-01-01', '1492-01-30')).toBe(false);
+  });
+});
+
+describe('dateToAbsDay / absDayToDate', () => {
+  it('base date returns 0', () => {
+    expect(dateToAbsDay('1492-01-01')).toBe(0);
+  });
+
+  it('end of first month returns 29', () => {
+    expect(dateToAbsDay('1492-01-30')).toBe(29);
+  });
+
+  it('Midwinter (festival) returns 30', () => {
+    expect(dateToAbsDay('1492-02-01')).toBe(30);
+  });
+
+  it('first day of next year returns 365', () => {
+    expect(dateToAbsDay('1493-01-01')).toBe(365);
+  });
+
+  it('round-trips through absDayToDate', () => {
+    for (const d of ['1492-01-01', '1492-02-01', '1492-09-15', '1492-17-30', '1493-01-01']) {
+      expect(absDayToDate(dateToAbsDay(d))).toBe(d);
+    }
+  });
+
+  it('absDayToDate(30) is Midwinter', () => {
+    expect(absDayToDate(30)).toBe('1492-02-01');
+  });
+});
+
+describe('isValidFRDate', () => {
+  it('accepts valid regular month dates', () => {
+    expect(isValidFRDate('1492-01-01')).toBe(true);
+    expect(isValidFRDate('1492-01-30')).toBe(true);
+    expect(isValidFRDate('1492-17-30')).toBe(true);
+  });
+
+  it('accepts valid festival dates', () => {
+    expect(isValidFRDate('1492-02-01')).toBe(true);
+    expect(isValidFRDate('1492-06-01')).toBe(true);
+  });
+
+  it('rejects day 0', () => {
+    expect(isValidFRDate('1492-01-00')).toBe(false);
+  });
+
+  it('rejects day > max for month', () => {
+    expect(isValidFRDate('1492-01-31')).toBe(false);
+    expect(isValidFRDate('1492-02-02')).toBe(false); // festival has only 1 day
+  });
+
+  it('rejects month 0 and month 18', () => {
+    expect(isValidFRDate('1492-00-01')).toBe(false);
+    expect(isValidFRDate('1492-18-01')).toBe(false);
+  });
+
+  it('rejects malformed strings', () => {
+    expect(isValidFRDate('not-a-date')).toBe(false);
+    expect(isValidFRDate('1492-1-1')).toBe(false);
+    expect(isValidFRDate('')).toBe(false);
+  });
+});
+
+describe('buildDateStr', () => {
+  it('zero-pads components', () => {
+    expect(buildDateStr(1492, 1, 1)).toBe('1492-01-01');
+    expect(buildDateStr(1492, 17, 30)).toBe('1492-17-30');
+  });
+
+  it('handles small year numbers', () => {
+    expect(buildDateStr(1, 1, 1)).toBe('0001-01-01');
   });
 });
 

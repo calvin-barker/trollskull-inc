@@ -79,3 +79,4 @@ CREATE TABLE IF NOT EXISTS events (
 
 -- Seed initial state (idempotent)
 INSERT OR IGNORE INTO game_state (key, value) VALUES ('current_date', '1492-01-01');
+INSERT OR IGNORE INTO game_state (key, value) VALUES ('full_moon_date', '1492-01-01');

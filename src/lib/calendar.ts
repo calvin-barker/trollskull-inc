@@ -22,7 +22,7 @@ const YEAR_DAYS = 365;
 const BASE_YEAR = 1492;
 
 /** Convert 'YYYY-MM-DD' (FR, MM = 01–17) to an absolute day count from 1492-01-01 */
-function dateToAbsDay(dateDR: string): number {
+export function dateToAbsDay(dateDR: string): number {
   const [year, month, day] = dateDR.split('-').map(Number);
   const yearOffset = (year - BASE_YEAR) * YEAR_DAYS;
   let monthOffset = 0;
@@ -33,7 +33,7 @@ function dateToAbsDay(dateDR: string): number {
 }
 
 /** Convert absolute day count back to 'YYYY-MM-DD' (FR) */
-function absDayToDate(absDay: number): string {
+export function absDayToDate(absDay: number): string {
   const year = BASE_YEAR + Math.floor(absDay / YEAR_DAYS);
   let remaining = absDay % YEAR_DAYS;
   for (let i = 0; i < FR_MONTHS.length; i++) {
@@ -74,4 +74,19 @@ export function dateBetween(date: string, from: string, to: string): boolean {
 /** Return list of { label, value } for building date-picker selects */
 export function monthOptions() {
   return FR_MONTHS.map(m => ({ label: m.name, value: String(m.num).padStart(2, '0') }));
+}
+
+/** Validate a FR date string 'YYYY-MM-DD' against the Harptos calendar */
+export function isValidFRDate(dateStr: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  if (year < 1) return false;
+  if (month < 1 || month > FR_MONTHS.length) return false;
+  const m = FR_MONTHS[month - 1];
+  return day >= 1 && day <= m.days;
+}
+
+/** Build a zero-padded FR date string from components */
+export function buildDateStr(year: number, month: number, day: number): string {
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
