@@ -1,10 +1,18 @@
-.PHONY: dev build check preview clean install backup
+.PHONY: dev build check preview clean install backup test test-watch
 
 # Development
 dev:
 	npm run dev
 
-# Type-check (primary verification — no test suite)
+# Run tests once
+test:
+	npm test
+
+# Run tests in watch mode (for TDD)
+test-watch:
+	npm run test:watch
+
+# Type-check
 check:
 	npm run check
 
