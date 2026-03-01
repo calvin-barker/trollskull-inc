@@ -1,11 +1,10 @@
 import db from '$lib/server/db';
+import { computeOutstandingDebt, distributeDividend, type Shareholder } from '$lib/finance';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {
-  const shareholders = db.prepare('SELECT * FROM shareholders ORDER BY shares DESC').all() as {
-    id: number; name: string; shares: number;
-  }[];
+  const shareholders = db.prepare('SELECT * FROM shareholders ORDER BY shares DESC').all() as Shareholder[];
 
   const totalShares = shareholders.reduce((s, sh) => s + sh.shares, 0);
 
@@ -15,7 +14,7 @@ export const load: PageServerLoad = () => {
   const loans = db.prepare("SELECT id, principal FROM loans WHERE status = 'active'").all() as { id: number; principal: number }[];
   const paidPrincipal = db.prepare('SELECT loan_id, SUM(principal_portion) as paid FROM loan_payments GROUP BY loan_id').all() as { loan_id: number; paid: number }[];
   const paidMap = Object.fromEntries(paidPrincipal.map(r => [r.loan_id, r.paid]));
-  const outstandingDebt = loans.reduce((s, l) => s + l.principal - (paidMap[l.id] ?? 0), 0);
+  const outstandingDebt = computeOutstandingDebt(loans, paidMap);
 
   const nav = cash - outstandingDebt;
 
@@ -72,16 +71,15 @@ export const actions: Actions = {
       return fail(400, { error: 'Amount and date required.' });
     }
 
-    const shareholders = db.prepare('SELECT * FROM shareholders').all() as { id: number; name: string; shares: number }[];
+    const shareholders = db.prepare('SELECT * FROM shareholders').all() as Shareholder[];
     const totalShares = shareholders.reduce((s, sh) => s + sh.shares, 0);
     if (totalShares === 0) return fail(400, { error: 'No shareholders.' });
 
+    const splits = distributeDividend(shareholders, totalAmount);
     db.transaction(() => {
-      for (const sh of shareholders) {
-        const amount = -Math.round((sh.shares / totalShares) * totalAmount);
-        if (amount === 0) continue;
+      for (const split of splits) {
         db.prepare('INSERT INTO transactions (date_dr, description, amount, category) VALUES (?, ?, ?, ?)').run(
-          date_dr, `Dividend to ${sh.name}`, amount, 'Dividend'
+          date_dr, `Dividend to ${split.name}`, split.amount, 'Dividend'
         );
       }
     })();

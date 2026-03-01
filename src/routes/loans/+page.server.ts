@@ -1,22 +1,8 @@
 import db from '$lib/server/db';
-import { formatDateDR, advanceDate, daysBetween } from '$lib/calendar';
+import { formatDateDR } from '$lib/calendar';
+import { buildAmortization, type Loan, type Payment } from '$lib/finance';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-
-type Loan = { id: number; lender: string; principal: number; interest_rate: number; start_date: string; term_days: number; status: string };
-type Payment = { id: number; loan_id: number; transaction_id: number; principal_portion: number; interest_portion: number };
-
-function buildAmortization(loan: Loan, payments: Payment[], currentDate: string) {
-  const paidPrincipal = payments.reduce((s, p) => s + p.principal_portion, 0);
-  const paidInterest  = payments.reduce((s, p) => s + p.interest_portion, 0);
-  const outstanding   = loan.principal - paidPrincipal;
-  const daysElapsed   = Math.max(0, daysBetween(loan.start_date, currentDate));
-  const dueDate       = advanceDate(loan.start_date, loan.term_days);
-  const daysRemaining = Math.max(0, daysBetween(currentDate, dueDate));
-  const accruedInterest = Math.round(outstanding * loan.interest_rate * (daysElapsed / 30));
-
-  return { outstanding, paidPrincipal, paidInterest, accruedInterest, daysElapsed, daysRemaining, dueDate, dueDateFormatted: formatDateDR(dueDate) };
-}
 
 export const load: PageServerLoad = () => {
   const currentDate = (db.prepare('SELECT value FROM game_state WHERE key = ?').get('current_date') as { value: string }).value;

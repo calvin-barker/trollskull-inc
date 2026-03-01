@@ -1,5 +1,6 @@
 import db from '$lib/server/db';
 import { formatDateDR, daysBetween } from '$lib/calendar';
+import { computePeriodDepreciation, computeAccruedInterest } from '$lib/finance';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ url }) => {
@@ -35,14 +36,7 @@ export const load: PageServerLoad = ({ url }) => {
   }[];
 
   const periodDays = Math.max(0, daysBetween(from, to) + 1);
-  const depreciationMemo = assets.reduce((sum, a) => {
-    const dailyDep = (a.cost - a.salvage_value) / a.useful_life_days;
-    if (a.purchase_date <= to) {
-      const assetDays = Math.min(periodDays, daysBetween(a.purchase_date, to) + 1);
-      return sum + dailyDep * assetDays;
-    }
-    return sum;
-  }, 0);
+  const depreciationMemo = computePeriodDepreciation(assets, from, to);
 
   // Accrued interest memo
   const loans = db.prepare("SELECT * FROM loans WHERE status = 'active'").all() as {
@@ -59,10 +53,7 @@ export const load: PageServerLoad = ({ url }) => {
 
   const paidMap = Object.fromEntries(paidInterest.map(r => [r.loan_id, r.paid]));
 
-  const accruedInterestMemo = loans.reduce((sum, loan) => {
-    const months = periodDays / 30;
-    return sum + loan.principal * loan.interest_rate * months - (paidMap[loan.id] ?? 0);
-  }, 0);
+  const accruedInterestMemo = computeAccruedInterest(loans, paidMap, periodDays);
 
   return {
     from, to,
@@ -73,7 +64,7 @@ export const load: PageServerLoad = ({ url }) => {
     totalRevenue,
     totalExpenses: Math.abs(totalExpenses),
     netIncome,
-    depreciationMemo: Math.round(depreciationMemo),
-    accruedInterestMemo: Math.round(accruedInterestMemo),
+    depreciationMemo,
+    accruedInterestMemo,
   };
 };

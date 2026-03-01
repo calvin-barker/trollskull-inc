@@ -1,9 +1,8 @@
 import db from '$lib/server/db';
-import { formatDateDR, daysBetween } from '$lib/calendar';
+import { formatDateDR } from '$lib/calendar';
+import { computeDepreciation, type Asset } from '$lib/finance';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-
-type Asset = { id: number; name: string; purchase_date: string; cost: number; useful_life_days: number; salvage_value: number; description: string | null };
 
 export const load: PageServerLoad = () => {
   const currentDate = (db.prepare('SELECT value FROM game_state WHERE key = ?').get('current_date') as { value: string }).value;
@@ -12,26 +11,14 @@ export const load: PageServerLoad = () => {
   return {
     currentDate,
     assets: assets.map(a => {
-      const age = Math.max(0, daysBetween(a.purchase_date, currentDate) + 1);
-      const dailyDep = (a.cost - a.salvage_value) / a.useful_life_days;
-      const accumulated = Math.min(Math.round(dailyDep * age), a.cost - a.salvage_value);
-      const bookValue = a.cost - accumulated;
-      const fullyDepreciated = age >= a.useful_life_days;
+      const dep = computeDepreciation(a, currentDate);
       return {
         ...a,
         purchaseDateFormatted: formatDateDR(a.purchase_date),
-        age,
-        accumulated,
-        bookValue,
-        fullyDepreciated,
+        ...dep,
       };
     }),
-    totalBookValue: assets.reduce((sum, a) => {
-      const age = Math.max(0, daysBetween(a.purchase_date, currentDate) + 1);
-      const dailyDep = (a.cost - a.salvage_value) / a.useful_life_days;
-      const acc = Math.min(Math.round(dailyDep * age), a.cost - a.salvage_value);
-      return sum + (a.cost - acc);
-    }, 0),
+    totalBookValue: assets.reduce((sum, a) => sum + computeDepreciation(a, currentDate).bookValue, 0),
   };
 };
 
