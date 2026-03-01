@@ -64,6 +64,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
+  rehireStaff: async ({ request }) => {
+    const form = await request.formData();
+    const id = Number(form.get('id'));
+    if (!id) return fail(400, { error: 'Staff ID required.' });
+    db.prepare("UPDATE staff SET status = 'active' WHERE id = ?").run(id);
+    return { success: true };
+  },
+
   payStaff: async ({ request }) => {
     const form = await request.formData();
     const staff_id = Number(form.get('staff_id'));

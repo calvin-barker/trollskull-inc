@@ -66,6 +66,19 @@
     {/if}
   </div>
 
+  <!-- Collect Revenue -->
+  <div class="bg-stone-900 rounded-lg border border-stone-800 p-4 flex items-center justify-between">
+    <div>
+      <h3 class="text-sm font-semibold text-stone-300">Collect Daily Revenue</h3>
+      <p class="text-xs text-stone-500 mt-1">Tavern: {data.dailyRevenueMin}–{data.dailyRevenueMax} gp (random) · Inn: {data.occupiedRoomRate} gp ({data.occupiedRooms} {data.occupiedRooms === 1 ? 'room' : 'rooms'})</p>
+    </div>
+    <form method="POST" action="?/collectRevenue" use:enhance>
+      <button type="submit" class="bg-emerald-700 hover:bg-emerald-600 text-stone-100 font-semibold px-4 py-2 rounded text-sm transition-colors">
+        Collect Revenue
+      </button>
+    </form>
+  </div>
+
   <div class="grid grid-cols-2 gap-4">
     <!-- Recent transactions -->
     <div class="bg-stone-900 rounded-lg border border-stone-800">

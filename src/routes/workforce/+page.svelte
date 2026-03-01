@@ -82,7 +82,7 @@
                     <form method="POST" action="?/payStaff" use:enhance={() => { return async ({ update }) => { payingStaffId = null; await update(); }; }} class="inline flex items-center gap-1">
                       <input type="hidden" name="staff_id" value={s.id} />
                       <input type="hidden" name="date_dr" value={data.currentDate} />
-                      <input name="days" type="number" min="1" value="10" required class="w-14 bg-stone-800 border border-stone-700 rounded px-1 py-0.5 text-xs text-stone-100" />
+                      <input name="days" type="number" min="1" value="1" required class="w-14 bg-stone-800 border border-stone-700 rounded px-1 py-0.5 text-xs text-stone-100" />
                       <button type="submit" class="text-xs bg-emerald-800 hover:bg-emerald-700 text-emerald-200 px-2 py-0.5 rounded transition-colors">Pay</button>
                       <button type="button" onclick={() => payingStaffId = null} class="text-stone-600 hover:text-stone-300 text-xs transition-colors">✕</button>
                     </form>
@@ -93,6 +93,11 @@
                   <form method="POST" action="?/dismissStaff" use:enhance={({ cancel }) => { if (!confirm(`Dismiss ${s.name}?`)) cancel(); }} class="inline">
                     <input type="hidden" name="id" value={s.id} />
                     <button class="text-stone-600 hover:text-red-400 transition-colors ml-1" title="Dismiss">&#10005;</button>
+                  </form>
+                {:else}
+                  <form method="POST" action="?/rehireStaff" class="inline">
+                    <input type="hidden" name="id" value={s.id} />
+                    <button class="text-xs bg-emerald-800 hover:bg-emerald-700 text-emerald-200 px-2 py-0.5 rounded transition-colors">Rehire</button>
                   </form>
                 {/if}
               </td>
