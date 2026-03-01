@@ -10,8 +10,9 @@
     { href: '/reports',      label: 'Reports'      },
     { href: '/equity',       label: 'Equity'       },
     { href: '/loans',        label: 'Loans'        },
-    { href: '/assets',       label: 'Assets'       },
+    { href: '/balances',     label: 'Balances'     },
     { href: '/hospitality',  label: 'Hospitality'  },
+    { href: '/settings',     label: 'Settings'     },
   ];
 </script>
 

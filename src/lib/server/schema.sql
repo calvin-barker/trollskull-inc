@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   description TEXT    NOT NULL,
   amount      INTEGER NOT NULL,  -- positive = income, negative = expense (gold pieces)
   category    TEXT    NOT NULL,
+  person      TEXT,
   booking_id  INTEGER REFERENCES bookings(id),
   loan_id     INTEGER REFERENCES loans(id),
   event_id    INTEGER REFERENCES events(id),

@@ -44,18 +44,21 @@ export function seedAll(db: Database.Database) {
 
     // Transactions — spread across several months
     const insertTx = db.prepare(
-      'INSERT INTO transactions (date_dr, description, amount, category, notes) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO transactions (date_dr, description, amount, category, person, notes) VALUES (?, ?, ?, ?, ?, ?)'
     );
 
     // Loan receipts
-    insertTx.run('1492-01-01', 'Loan from Mirt the Moneylender', 2500, 'loan', 'Principal received');
-    insertTx.run('1492-01-15', 'Loan from Istrid Horn', 1000, 'loan', 'Principal received');
+    insertTx.run('1492-01-01', 'Loan from Mirt the Moneylender', 2500, 'loan', 'Mirt the Moneylender', 'Principal received');
+    insertTx.run('1492-01-15', 'Loan from Istrid Horn', 1000, 'loan', 'Istrid Horn', 'Principal received');
+
+    // Owner's equity injection
+    insertTx.run('1492-01-01', 'Capital injection from Renaer Neverember', 500, "Owner's Equity", 'Renaer Neverember', 'Initial investment');
 
     // Asset purchases
-    insertTx.run('1492-01-01', 'Purchase: Bar Counter', -200, 'asset', null);
-    insertTx.run('1492-01-01', 'Purchase: Brewing Kettle', -150, 'asset', null);
-    insertTx.run('1492-01-05', 'Purchase: Tavern Sign', -50, 'asset', null);
-    insertTx.run('1492-01-01', 'Purchase: Kitchen Stove', -300, 'asset', null);
+    insertTx.run('1492-01-01', 'Purchase: Bar Counter', -200, 'asset', null, null);
+    insertTx.run('1492-01-01', 'Purchase: Brewing Kettle', -150, 'asset', null, null);
+    insertTx.run('1492-01-05', 'Purchase: Tavern Sign', -50, 'asset', null, null);
+    insertTx.run('1492-01-01', 'Purchase: Kitchen Stove', -300, 'asset', null, null);
 
     // Daily income — generate ~60 transactions over first 3 months
     let date = '1492-01-02';
@@ -66,28 +69,28 @@ export function seedAll(db: Database.Database) {
     for (let d = 0; d < 60; d++) {
       const item = descriptions[d % 2];
       const amount = item.min + (d * 7 + 3) % (item.max - item.min + 1);
-      insertTx.run(date, item.desc, amount, item.cat, null);
+      insertTx.run(date, item.desc, amount, item.cat, null, null);
 
       // Every 10 days, add wages expense
       if (d % 10 === 9) {
-        insertTx.run(date, 'Staff wages', -25, 'wages', 'Barkeep and cook');
+        insertTx.run(date, 'Staff wages', -25, 'wages', null, 'Barkeep and cook');
       }
 
       // Every 30 days, add supplies expense
       if (d % 30 === 29) {
-        insertTx.run(date, 'Monthly supplies', -40, 'supplies', 'Ale barrels, flour, firewood');
+        insertTx.run(date, 'Monthly supplies', -40, 'supplies', null, 'Ale barrels, flour, firewood');
       }
 
       date = advanceDate(date, 1);
     }
 
     // Event transactions
-    insertTx.run('1492-01-10', 'Bard Night revenue', 45, 'event', null);
-    insertTx.run('1492-01-10', 'Bard Night costs', -10, 'event', null);
-    insertTx.run('1492-01-20', 'Arm Wrestling revenue', 30, 'event', null);
-    insertTx.run('1492-01-20', 'Arm Wrestling costs', -5, 'event', null);
-    insertTx.run('1492-03-05', 'Wine Tasting revenue', 60, 'event', null);
-    insertTx.run('1492-03-05', 'Wine Tasting costs', -25, 'event', null);
+    insertTx.run('1492-01-10', 'Bard Night revenue', 45, 'event', null, null);
+    insertTx.run('1492-01-10', 'Bard Night costs', -10, 'event', null, null);
+    insertTx.run('1492-01-20', 'Arm Wrestling revenue', 30, 'event', null, null);
+    insertTx.run('1492-01-20', 'Arm Wrestling costs', -5, 'event', null, null);
+    insertTx.run('1492-03-05', 'Wine Tasting revenue', 60, 'event', null, null);
+    insertTx.run('1492-03-05', 'Wine Tasting costs', -25, 'event', null, null);
 
     // Bookings with Waterdhavian NPCs
     const rooms = db.prepare('SELECT id, rate FROM rooms').all() as { id: number; rate: number }[];

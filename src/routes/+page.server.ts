@@ -1,6 +1,5 @@
 import db from '$lib/server/db';
 import { formatDateDR, isValidFRDate } from '$lib/calendar';
-import { seedAll, clearAll } from '$lib/server/seed';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -15,7 +14,7 @@ export const load: PageServerLoad = () => {
 
   const recentTx = db.prepare(
     'SELECT * FROM transactions ORDER BY date_dr DESC, id DESC LIMIT 10'
-  ).all() as { id: number; date_dr: string; description: string; amount: number; category: string }[];
+  ).all() as { id: number; date_dr: string; description: string; amount: number; category: string; person: string | null }[];
 
   const upcomingBookings = db.prepare(`
     SELECT b.*, r.name as room_name
@@ -58,13 +57,5 @@ export const actions: Actions = {
       return fail(400, { error: 'Invalid Forgotten Realms date' });
     }
     db.prepare('INSERT OR REPLACE INTO game_state (key, value) VALUES (?, ?)').run('full_moon_date', date);
-  },
-
-  seed: async () => {
-    seedAll(db);
-  },
-
-  clear: async () => {
-    clearAll(db);
   },
 };

@@ -78,7 +78,7 @@
             <li class="px-4 py-2 flex justify-between items-center">
               <div>
                 <p class="text-sm text-stone-200">{tx.description}</p>
-                <p class="text-xs text-stone-500">{tx.dateFormatted} · {tx.category}</p>
+                <p class="text-xs text-stone-500">{tx.dateFormatted} · {tx.category}{#if tx.person} · {tx.person}{/if}</p>
               </div>
               <span class="text-sm font-mono {tx.amount < 0 ? 'text-red-400' : 'text-emerald-400'}">
                 {tx.amount > 0 ? '+' : ''}{tx.amount} gp
@@ -107,36 +107,4 @@
     </div>
   </div>
 
-  <!-- Data Management -->
-  <div class="bg-stone-900 rounded-lg border border-stone-800 p-4">
-    <h3 class="text-sm font-semibold text-stone-300 mb-3">Data Management</h3>
-    <div class="flex gap-3">
-      <form method="POST" action="?/seed" use:enhance>
-        <button
-          type="submit"
-          class="bg-emerald-700 hover:bg-emerald-600 text-stone-100 font-semibold px-4 py-2 rounded text-sm transition-colors"
-        >
-          Generate Sample Data
-        </button>
-      </form>
-      <form
-        method="POST"
-        action="?/clear"
-        use:enhance={() => {
-          return async ({ update }) => {
-            if (confirm('Clear ALL data? This cannot be undone.')) {
-              await update();
-            }
-          };
-        }}
-      >
-        <button
-          type="submit"
-          class="bg-red-800 hover:bg-red-700 text-stone-100 font-semibold px-4 py-2 rounded text-sm transition-colors"
-        >
-          Clear All Data
-        </button>
-      </form>
-    </div>
-  </div>
 </div>
