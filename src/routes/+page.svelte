@@ -1,7 +1,11 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
+  import CalendarPicker from '$lib/components/CalendarPicker.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
+
+  let showMoonConfig = $state(false);
 </script>
 
 <div class="space-y-6">
@@ -25,26 +29,41 @@
     </div>
   {/if}
 
-  <!-- Advance date -->
-  <div class="bg-stone-900 rounded-lg p-4 border border-stone-800">
-    <h3 class="text-sm font-semibold text-stone-300 mb-3">Advance Date</h3>
-    <form method="POST" action="?/advance" class="flex gap-2 items-center">
-      <input
-        type="number"
-        name="days"
-        value="1"
-        min="1"
-        max="365"
-        class="w-20 bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100"
-      />
-      <span class="text-stone-400 text-sm">days</span>
-      <button
-        type="submit"
-        class="bg-amber-600 hover:bg-amber-500 text-stone-950 font-semibold px-3 py-1 rounded text-sm transition-colors"
-      >
-        Advance
-      </button>
-    </form>
+  <!-- Calendar picker -->
+  <CalendarPicker currentDate={data.currentDate} fullMoonDate={data.fullMoonDate} />
+
+  <!-- Moon config (collapsible) -->
+  <div class="bg-stone-900 rounded-lg border border-stone-800">
+    <button
+      type="button"
+      onclick={() => showMoonConfig = !showMoonConfig}
+      class="w-full px-4 py-3 flex items-center justify-between text-sm text-stone-400 hover:text-stone-300 transition-colors"
+    >
+      <span>Moon Configuration</span>
+      <span class="text-xs">{showMoonConfig ? '▲' : '▼'}</span>
+    </button>
+    {#if showMoonConfig}
+      <form method="POST" action="?/setFullMoon" use:enhance class="px-4 pb-4">
+        <label class="block text-xs text-stone-500 mb-1">
+          Reference full moon date (YYYY-MM-DD)
+        </label>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            name="date"
+            value={data.fullMoonDate}
+            pattern="\d{4}-\d{2}-\d{2}"
+            class="flex-1 bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100"
+          />
+          <button
+            type="submit"
+            class="bg-stone-700 hover:bg-stone-600 text-stone-200 font-semibold px-3 py-1 rounded text-sm transition-colors"
+          >
+            Set
+          </button>
+        </div>
+      </form>
+    {/if}
   </div>
 
   <div class="grid grid-cols-2 gap-4">
@@ -85,6 +104,39 @@
           {/each}
         </ul>
       {/if}
+    </div>
+  </div>
+
+  <!-- Data Management -->
+  <div class="bg-stone-900 rounded-lg border border-stone-800 p-4">
+    <h3 class="text-sm font-semibold text-stone-300 mb-3">Data Management</h3>
+    <div class="flex gap-3">
+      <form method="POST" action="?/seed" use:enhance>
+        <button
+          type="submit"
+          class="bg-emerald-700 hover:bg-emerald-600 text-stone-100 font-semibold px-4 py-2 rounded text-sm transition-colors"
+        >
+          Generate Sample Data
+        </button>
+      </form>
+      <form
+        method="POST"
+        action="?/clear"
+        use:enhance={() => {
+          return async ({ update }) => {
+            if (confirm('Clear ALL data? This cannot be undone.')) {
+              await update();
+            }
+          };
+        }}
+      >
+        <button
+          type="submit"
+          class="bg-red-800 hover:bg-red-700 text-stone-100 font-semibold px-4 py-2 rounded text-sm transition-colors"
+        >
+          Clear All Data
+        </button>
+      </form>
     </div>
   </div>
 </div>

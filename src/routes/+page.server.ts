@@ -1,11 +1,15 @@
 import db from '$lib/server/db';
-import { formatDateDR, advanceDate } from '$lib/calendar';
+import { formatDateDR, isValidFRDate } from '$lib/calendar';
+import { seedAll, clearAll } from '$lib/server/seed';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {
   const dateRow = db.prepare('SELECT value FROM game_state WHERE key = ?').get('current_date') as { value: string };
   const currentDate = dateRow.value;
+
+  const fullMoonRow = db.prepare('SELECT value FROM game_state WHERE key = ?').get('full_moon_date') as { value: string } | undefined;
+  const fullMoonDate = fullMoonRow?.value ?? '1492-01-01';
 
   const balance = (db.prepare('SELECT COALESCE(SUM(amount), 0) AS total FROM transactions').get() as { total: number }).total;
 
@@ -25,6 +29,7 @@ export const load: PageServerLoad = () => {
   return {
     currentDate,
     currentDateFormatted: formatDateDR(currentDate),
+    fullMoonDate,
     balance,
     recentTx: recentTx.map(t => ({ ...t, dateFormatted: formatDateDR(t.date_dr) })),
     upcomingBookings: upcomingBookings.map(b => ({
@@ -36,15 +41,30 @@ export const load: PageServerLoad = () => {
 };
 
 export const actions: Actions = {
-  advance: async ({ request }) => {
+  setDate: async ({ request }) => {
     const form = await request.formData();
-    const days = Number(form.get('days') ?? 1);
-    if (!Number.isInteger(days) || days < 1 || days > 365) {
-      return fail(400, { error: 'Days must be between 1 and 365' });
+    const date = String(form.get('date') ?? '');
+    if (!isValidFRDate(date)) {
+      return fail(400, { error: 'Invalid Forgotten Realms date' });
     }
-    const row = db.prepare('SELECT value FROM game_state WHERE key = ?').get('current_date') as { value: string };
-    const newDate = advanceDate(row.value, days);
-    db.prepare('UPDATE game_state SET value = ? WHERE key = ?').run(newDate, 'current_date');
-    return { newDate, newDateFormatted: formatDateDR(newDate) };
-  }
+    db.prepare('UPDATE game_state SET value = ? WHERE key = ?').run(date, 'current_date');
+    return { newDate: date, newDateFormatted: formatDateDR(date) };
+  },
+
+  setFullMoon: async ({ request }) => {
+    const form = await request.formData();
+    const date = String(form.get('date') ?? '');
+    if (!isValidFRDate(date)) {
+      return fail(400, { error: 'Invalid Forgotten Realms date' });
+    }
+    db.prepare('INSERT OR REPLACE INTO game_state (key, value) VALUES (?, ?)').run('full_moon_date', date);
+  },
+
+  seed: async () => {
+    seedAll(db);
+  },
+
+  clear: async () => {
+    clearAll(db);
+  },
 };

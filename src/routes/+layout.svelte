@@ -20,7 +20,7 @@
   <aside class="w-56 shrink-0 bg-stone-900 border-r border-stone-800 flex flex-col">
     <div class="p-4 border-b border-stone-800">
       <h1 class="text-lg font-bold text-amber-400 leading-tight">Trollskull Inc.</h1>
-      <p class="text-xs text-stone-400 mt-1">{data.currentDateFormatted}</p>
+      <p class="text-xs text-stone-400 mt-1">{data.moonEmoji} {data.currentDateFormatted}</p>
     </div>
     <nav class="flex-1 p-2 space-y-1">
       {#each navLinks as link}
