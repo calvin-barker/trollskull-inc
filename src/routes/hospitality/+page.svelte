@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import type { PageData, ActionData } from './$types';
   let { data, form }: { data: PageData; form: ActionData } = $props();
+  let editingRoomId: number | null = $state(null);
 </script>
 
 <div class="space-y-6">
@@ -13,16 +15,36 @@
     </div>
     <div class="p-4 grid grid-cols-3 gap-3">
       {#each data.rooms as room}
-        <div class="bg-stone-800 rounded p-3 border border-stone-700">
-          <div class="flex justify-between items-start">
-            <p class="text-stone-200 font-semibold text-sm">{room.name}</p>
-            <span class="text-xs px-1.5 py-0.5 rounded {room.occupied ? 'bg-red-900 text-red-300' : 'bg-emerald-900 text-emerald-300'}">
-              {room.occupied ? 'Occupied' : 'Vacant'}
-            </span>
+        {#if editingRoomId === room.id}
+          <form method="POST" action="?/editRoom" use:enhance={() => { return async ({ update }) => { editingRoomId = null; await update(); }; }} class="bg-stone-800 rounded p-3 border border-amber-700 space-y-2">
+            <input type="hidden" name="id" value={room.id} />
+            <input name="name" value={room.name} required class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+            <div class="flex gap-2">
+              <input name="floor" type="number" value={room.floor ?? ''} placeholder="Floor" class="w-16 bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+              <input name="rate" type="number" min="0" value={room.rate} required class="w-20 bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+            </div>
+            <input name="description" value={room.description ?? ''} placeholder="Description" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+            <div class="flex gap-1">
+              <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-stone-950 font-semibold px-2 py-0.5 rounded text-xs transition-colors">Save</button>
+              <button type="button" onclick={() => editingRoomId = null} class="bg-stone-700 hover:bg-stone-600 text-stone-300 px-2 py-0.5 rounded text-xs transition-colors">Cancel</button>
+            </div>
+          </form>
+        {:else}
+          <div class="bg-stone-800 rounded p-3 border border-stone-700">
+            <div class="flex justify-between items-start">
+              <p class="text-stone-200 font-semibold text-sm">{room.name}</p>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick={() => editingRoomId = room.id} class="text-stone-600 hover:text-stone-300 text-xs transition-colors">edit</button>
+                <span class="text-xs px-1.5 py-0.5 rounded {room.occupied ? 'bg-red-900 text-red-300' : 'bg-emerald-900 text-emerald-300'}">
+                  {room.occupied ? 'Occupied' : 'Vacant'}
+                </span>
+              </div>
+            </div>
+            {#if room.description}<p class="text-xs text-stone-500">{room.description}</p>{/if}
+            {#if room.floor !== null}<p class="text-xs text-stone-500">Floor {room.floor}</p>{/if}
+            <p class="text-xs text-amber-400 mt-1 font-mono">{room.rate} gp/night</p>
           </div>
-          {#if room.floor}<p class="text-xs text-stone-500">Floor {room.floor}</p>{/if}
-          <p class="text-xs text-amber-400 mt-1 font-mono">{room.rate} gp/night</p>
-        </div>
+        {/if}
       {:else}
         <p class="col-span-3 text-stone-500 text-sm">No rooms configured.</p>
       {/each}

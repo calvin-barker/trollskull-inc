@@ -14,10 +14,10 @@ export const load: PageServerLoad = () => {
   const bookings = db.prepare('SELECT * FROM bookings ORDER BY check_in DESC').all() as Booking[];
   const events = db.prepare('SELECT * FROM events ORDER BY date_dr DESC').all() as Event[];
 
-  // Determine occupancy: room has an active booking overlapping currentDate
+  // Determine occupancy: room has an unpaid booking overlapping currentDate
   const occupiedRoomIds = new Set(
     bookings
-      .filter(b => b.check_in <= currentDate && b.check_out > currentDate)
+      .filter(b => !b.paid && b.check_in <= currentDate && b.check_out > currentDate)
       .map(b => b.room_id)
   );
 
@@ -45,6 +45,18 @@ export const actions: Actions = {
     const description = String(form.get('description') ?? '').trim() || null;
     if (!name || isNaN(rate) || rate < 0) return fail(400, { error: 'Name and rate required.' });
     db.prepare('INSERT INTO rooms (name, floor, rate, description) VALUES (?, ?, ?, ?)').run(name, floor, rate, description);
+    return { success: true };
+  },
+
+  editRoom: async ({ request }) => {
+    const form = await request.formData();
+    const id = Number(form.get('id'));
+    const name = String(form.get('name') ?? '').trim();
+    const floor = form.get('floor') ? Number(form.get('floor')) : null;
+    const rate = Number(form.get('rate'));
+    const description = String(form.get('description') ?? '').trim() || null;
+    if (!id || !name || isNaN(rate) || rate < 0) return fail(400, { error: 'Name and rate required.' });
+    db.prepare('UPDATE rooms SET name = ?, floor = ?, rate = ?, description = ? WHERE id = ?').run(name, floor, rate, description, id);
     return { success: true };
   },
 
