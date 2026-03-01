@@ -21,12 +21,10 @@
       <form
         method="POST"
         action="?/clear"
-        use:enhance={() => {
-          return async ({ update }) => {
-            if (confirm('Clear ALL data? This cannot be undone.')) {
-              await update();
-            }
-          };
+        use:enhance={({ cancel }) => {
+          if (!confirm('Clear ALL data? This cannot be undone.')) {
+            cancel();
+          }
         }}
       >
         <button

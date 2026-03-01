@@ -113,9 +113,9 @@ export function seedAll(db: Database.Database) {
 export function clearAll(db: Database.Database) {
   const tx = db.transaction(() => {
     db.exec('DELETE FROM loan_payments');
+    db.exec('DELETE FROM transactions');
     db.exec('DELETE FROM bookings');
     db.exec('DELETE FROM events');
-    db.exec('DELETE FROM transactions');
     db.exec('DELETE FROM loans');
     db.exec('DELETE FROM assets');
     db.exec('DELETE FROM shareholders');
