@@ -190,8 +190,14 @@
               <td class="px-4 py-2 text-right font-mono {tx.amount < 0 ? 'text-red-400' : 'text-emerald-400'}">
                 {tx.amount > 0 ? '+' : ''}{tx.amount} gp
               </td>
-              <td class="px-4 py-2">
-                <button type="button" onclick={() => startEdit(tx.id)} class="text-stone-600 hover:text-stone-300 text-xs transition-colors">edit</button>
+              <td class="px-4 py-2 whitespace-nowrap">
+                <span class="inline-flex items-center gap-2">
+                  <button type="button" onclick={() => startEdit(tx.id)} class="text-stone-600 hover:text-stone-300 transition-colors" title="Edit">&#9998;</button>
+                  <form method="POST" action="?/delete" use:enhance={({ cancel }) => { if (!confirm('Delete this transaction?')) cancel(); }} class="inline">
+                    <input type="hidden" name="id" value={tx.id} />
+                    <button type="submit" class="text-stone-600 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
+                  </form>
+                </span>
               </td>
             </tr>
           {/if}

@@ -82,4 +82,17 @@ export const actions: Actions = {
 
     return { success: true };
   },
+
+  delete: async ({ request }) => {
+    const form = await request.formData();
+    const id = Number(form.get('id'));
+    if (!id) return fail(400, { error: 'Transaction ID required.' });
+
+    // Clean up any linked loan_payments
+    db.transaction(() => {
+      db.prepare('DELETE FROM loan_payments WHERE transaction_id = ?').run(id);
+      db.prepare('DELETE FROM transactions WHERE id = ?').run(id);
+    })();
+    return { success: true };
+  },
 };
