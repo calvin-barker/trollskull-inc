@@ -3,6 +3,7 @@
   import type { PageData, ActionData } from './$types';
   let { data, form }: { data: PageData; form: ActionData } = $props();
   let editingRoomId: number | null = $state(null);
+  let editingBookingId: number | null = $state(null);
 </script>
 
 <div class="space-y-6">
@@ -73,31 +74,90 @@
           <th class="text-left px-4 py-2">Room</th>
           <th class="text-left px-4 py-2">Check-in</th>
           <th class="text-left px-4 py-2">Check-out</th>
-          <th class="text-right px-4 py-2">Total</th>
+          <th class="text-right px-4 py-2">Total (gp)</th>
           <th class="text-center px-4 py-2">Status</th>
+          <th class="px-2 py-2 w-16"></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-stone-800">
         {#each data.bookings as b}
-          <tr>
-            <td class="px-4 py-2 text-stone-200">{b.guest_name}</td>
-            <td class="px-4 py-2 text-stone-400">{b.roomName}</td>
-            <td class="px-4 py-2 text-stone-400">{b.checkInFormatted}</td>
-            <td class="px-4 py-2 text-stone-400">{b.checkOutFormatted}</td>
-            <td class="px-4 py-2 text-right font-mono text-amber-400">{b.total} gp</td>
-            <td class="px-4 py-2 text-center">
-              {#if b.paid}
-                <span class="text-xs text-stone-500">Paid</span>
-              {:else}
-                <form method="POST" action="?/checkout">
-                  <input type="hidden" name="booking_id" value={b.id} />
-                  <button class="text-xs bg-emerald-800 hover:bg-emerald-700 text-emerald-200 px-2 py-0.5 rounded transition-colors">Check out</button>
+          {#if editingBookingId === b.id}
+            <tr>
+              <td colspan="7" class="px-4 py-3">
+                <form method="POST" action="?/editBooking" use:enhance={() => { return async ({ update }) => { editingBookingId = null; await update(); }; }} class="grid grid-cols-6 gap-2 items-end">
+                  <input type="hidden" name="id" value={b.id} />
+                  <div>
+                    <label class="block text-xs text-stone-400 mb-1">Guest</label>
+                    <input name="guest_name" value={b.guest_name} required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-stone-400 mb-1">Room</label>
+                    <select name="room_id" class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100">
+                      {#each data.rooms as r}<option value={r.id} selected={r.id === b.room_id}>{r.name}</option>{/each}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-stone-400 mb-1">Check-in</label>
+                    <input name="check_in" value={b.check_in} required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-stone-400 mb-1">Check-out</label>
+                    <input name="check_out" value={b.check_out} required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-stone-400 mb-1">Rate (gp)</label>
+                    <input name="rate" type="number" min="0" value={b.rate} required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+                  </div>
+                  <div class="flex gap-1">
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-stone-950 font-semibold px-2 py-1 rounded text-xs transition-colors">Save</button>
+                    <button type="button" onclick={() => editingBookingId = null} class="bg-stone-700 hover:bg-stone-600 text-stone-300 px-2 py-1 rounded text-xs transition-colors">Cancel</button>
+                  </div>
+                  <div class="col-span-6">
+                    <label class="block text-xs text-stone-400 mb-1">Notes</label>
+                    <input name="notes" value={b.notes ?? ''} class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-100" />
+                  </div>
                 </form>
-              {/if}
-            </td>
-          </tr>
+              </td>
+            </tr>
+          {:else}
+            <tr>
+              <td class="px-4 py-2 text-stone-200">
+                {b.guest_name}
+                {#if b.notes}<span class="text-xs text-stone-500 ml-1">— {b.notes}</span>{/if}
+              </td>
+              <td class="px-4 py-2 text-stone-400">{b.roomName}</td>
+              <td class="px-4 py-2 text-stone-400">{b.checkInFormatted}</td>
+              <td class="px-4 py-2 text-stone-400">{b.checkOutFormatted}</td>
+              <td class="px-4 py-2 text-right font-mono text-amber-400 whitespace-nowrap">{b.total}</td>
+              <td class="px-4 py-2 text-center whitespace-nowrap">
+                {#if b.status === 'paid'}
+                  <span class="text-xs text-stone-500">Paid</span>
+                {:else if b.status === 'upcoming'}
+                  <span class="text-xs text-stone-500">Upcoming</span>
+                {:else if b.status === 'past'}
+                  <span class="text-xs text-yellow-500">Overdue</span>
+                {:else}
+                  <form method="POST" action="?/checkout" class="inline">
+                    <input type="hidden" name="booking_id" value={b.id} />
+                    <button class="text-xs bg-emerald-800 hover:bg-emerald-700 text-emerald-200 px-2 py-0.5 rounded transition-colors">Check out</button>
+                  </form>
+                {/if}
+              </td>
+              <td class="px-2 py-2 whitespace-nowrap">
+                {#if b.status !== 'paid'}
+                  <button type="button" onclick={() => editingBookingId = b.id} class="text-stone-600 hover:text-amber-400 transition-colors" title="Edit">&#9998;</button>
+                  {#if b.status === 'upcoming'}
+                    <form method="POST" action="?/deleteBooking" use:enhance={({ cancel }) => { if (!confirm(`Cancel booking for ${b.guest_name}?`)) cancel(); }} class="inline">
+                      <input type="hidden" name="id" value={b.id} />
+                      <button class="text-stone-600 hover:text-red-400 transition-colors ml-1" title="Cancel booking">&#10005;</button>
+                    </form>
+                  {/if}
+                {/if}
+              </td>
+            </tr>
+          {/if}
         {:else}
-          <tr><td colspan="6" class="px-4 py-6 text-center text-stone-500">No bookings.</td></tr>
+          <tr><td colspan="7" class="px-4 py-6 text-center text-stone-500">No bookings.</td></tr>
         {/each}
       </tbody>
     </table>

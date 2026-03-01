@@ -1,5 +1,5 @@
 import db from '$lib/server/db';
-import { formatDateDR, daysBetween } from '$lib/calendar';
+import { formatDateDR, daysBetween, dateToAbsDay } from '$lib/calendar';
 import { getOccupiedRoomIds } from '$lib/hospitality';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
@@ -18,17 +18,29 @@ export const load: PageServerLoad = () => {
   // Determine occupancy using proper FR date comparison
   const occupiedRoomIds = getOccupiedRoomIds(bookings, currentDate);
 
+  const currentAbs = dateToAbsDay(currentDate);
+
   return {
     currentDate,
     rooms: rooms.map(r => ({ ...r, occupied: occupiedRoomIds.has(r.id) })),
-    bookings: bookings.map(b => ({
-      ...b,
-      checkInFormatted: formatDateDR(b.check_in),
-      checkOutFormatted: formatDateDR(b.check_out),
-      nights: daysBetween(b.check_in, b.check_out),
-      total: b.rate * daysBetween(b.check_in, b.check_out),
-      roomName: rooms.find(r => r.id === b.room_id)?.name ?? 'Unknown',
-    })),
+    bookings: bookings.map(b => {
+      const checkInAbs = dateToAbsDay(b.check_in);
+      const checkOutAbs = dateToAbsDay(b.check_out);
+      const status: 'paid' | 'active' | 'upcoming' | 'past' = b.paid
+        ? 'paid'
+        : checkInAbs > currentAbs ? 'upcoming'
+        : checkOutAbs <= currentAbs ? 'past'
+        : 'active';
+      return {
+        ...b,
+        status,
+        checkInFormatted: formatDateDR(b.check_in),
+        checkOutFormatted: formatDateDR(b.check_out),
+        nights: daysBetween(b.check_in, b.check_out),
+        total: b.rate * daysBetween(b.check_in, b.check_out),
+        roomName: rooms.find(r => r.id === b.room_id)?.name ?? 'Unknown',
+      };
+    }),
     events: events.map(e => ({ ...e, dateFormatted: formatDateDR(e.date_dr) })),
   };
 };
@@ -100,6 +112,43 @@ export const actions: Actions = {
         booking.check_out, `Room: ${room.name} — ${booking.guest_name} (${nights} nights)`, total, 'Room Rental', booking_id
       );
     })();
+    return { success: true };
+  },
+
+  editBooking: async ({ request }) => {
+    const form = await request.formData();
+    const id = Number(form.get('id'));
+    const room_id    = Number(form.get('room_id'));
+    const guest_name = String(form.get('guest_name') ?? '').trim();
+    const check_in   = String(form.get('check_in') ?? '').trim();
+    const check_out  = String(form.get('check_out') ?? '').trim();
+    const rate       = Number(form.get('rate'));
+    const notes      = String(form.get('notes') ?? '').trim() || null;
+
+    if (!id || !guest_name || !check_in || !check_out || isNaN(rate) || rate < 0 || check_out <= check_in) {
+      return fail(400, { error: 'All fields required; check-out must be after check-in.' });
+    }
+
+    // Overlap check (exclude self)
+    const overlap = db.prepare(`
+      SELECT id FROM bookings
+      WHERE room_id = ? AND check_in < ? AND check_out > ? AND id != ?
+    `).get(room_id, check_out, check_in, id);
+    if (overlap) return fail(400, { error: 'Room already booked for those dates.' });
+
+    db.prepare('UPDATE bookings SET room_id = ?, guest_name = ?, check_in = ?, check_out = ?, rate = ?, notes = ? WHERE id = ?').run(
+      room_id, guest_name, check_in, check_out, rate, notes, id
+    );
+    return { success: true };
+  },
+
+  deleteBooking: async ({ request }) => {
+    const form = await request.formData();
+    const id = Number(form.get('id'));
+    const booking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(id) as Booking | undefined;
+    if (!booking) return fail(404, { error: 'Booking not found.' });
+    if (booking.paid) return fail(400, { error: 'Cannot delete a paid booking.' });
+    db.prepare('DELETE FROM bookings WHERE id = ?').run(id);
     return { success: true };
   },
 
