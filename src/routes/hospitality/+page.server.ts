@@ -1,5 +1,6 @@
 import db from '$lib/server/db';
 import { formatDateDR, daysBetween } from '$lib/calendar';
+import { getOccupiedRoomIds } from '$lib/hospitality';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -14,12 +15,8 @@ export const load: PageServerLoad = () => {
   const bookings = db.prepare('SELECT * FROM bookings ORDER BY check_in DESC').all() as Booking[];
   const events = db.prepare('SELECT * FROM events ORDER BY date_dr DESC').all() as Event[];
 
-  // Determine occupancy: room has an unpaid booking overlapping currentDate
-  const occupiedRoomIds = new Set(
-    bookings
-      .filter(b => !b.paid && b.check_in <= currentDate && b.check_out > currentDate)
-      .map(b => b.room_id)
-  );
+  // Determine occupancy using proper FR date comparison
+  const occupiedRoomIds = getOccupiedRoomIds(bookings, currentDate);
 
   return {
     currentDate,
