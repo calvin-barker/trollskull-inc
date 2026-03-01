@@ -10,11 +10,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev          # Start dev server (http://localhost:5173)
+npm test             # Run tests once (vitest run)
+npm run test:watch   # Run tests in watch mode (vitest)
 npm run check        # Type-check (svelte-check + tsc)
 npm run build        # Production build
 ```
 
-No test suite. `npm run check` is the primary verification step.
+Verify with `npm test && npm run check` before committing. Use TDD: write a failing test first, then implement.
 
 ## Tech Stack
 
@@ -32,6 +34,7 @@ All database access is server-side via SvelteKit load functions and form actions
 - `src/lib/server/db.ts` — SQLite singleton (WAL mode, foreign keys ON). Runs `schema.sql` on startup.
 - `src/lib/server/schema.sql` — 9 tables: `game_state`, `transactions`, `shareholders`, `loans`, `loan_payments`, `assets`, `rooms`, `bookings`, `events`
 - `src/lib/calendar.ts` — Forgotten Realms (Harptos) calendar utilities. Dates stored as `YYYY-MM-DD` with months 01–17 (12 regular months + 5 festival days). `formatDateDR()`, `advanceDate()`, `daysBetween()`.
+- `src/lib/finance.ts` — Pure financial computation functions: `buildAmortization()`, `computeDepreciation()`, `computeOutstandingDebt()`, `distributeDividend()`, `computePeriodDepreciation()`, `computeAccruedInterest()`. Shared types: `Loan`, `Payment`, `Asset`, `Shareholder`.
 
 ### Routes
 
