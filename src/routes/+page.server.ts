@@ -1,5 +1,5 @@
 import db from '$lib/server/db';
-import { formatDateDR, isValidFRDate, daysBetween } from '$lib/calendar';
+import { formatDateDR, isValidFRDate } from '$lib/calendar';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -46,41 +46,7 @@ export const actions: Actions = {
     if (!isValidFRDate(date)) {
       return fail(400, { error: 'Invalid Forgotten Realms date' });
     }
-
-    const oldDate = (db.prepare('SELECT value FROM game_state WHERE key = ?').get('current_date') as { value: string }).value;
-    const days = daysBetween(oldDate, date);
-
-    db.transaction(() => {
-      db.prepare('UPDATE game_state SET value = ? WHERE key = ?').run(date, 'current_date');
-
-      if (days > 0) {
-        // Auto-post staff wages
-        const totalDailyWage = (db.prepare(
-          "SELECT COALESCE(SUM(daily_wage), 0) AS total FROM staff WHERE status = 'active'"
-        ).get() as { total: number }).total;
-        if (totalDailyWage > 0) {
-          db.prepare(
-            'INSERT INTO transactions (date_dr, description, amount, category, notes) VALUES (?, ?, ?, ?, ?)'
-          ).run(date, `Staff wages (${days} day${days > 1 ? 's' : ''})`, -(totalDailyWage * days), 'Wages', `${totalDailyWage} gp/day`);
-        }
-
-        // Auto-post tavern revenue (random per day)
-        const minRow = db.prepare('SELECT value FROM game_state WHERE key = ?').get('daily_revenue_min') as { value: string } | undefined;
-        const maxRow = db.prepare('SELECT value FROM game_state WHERE key = ?').get('daily_revenue_max') as { value: string } | undefined;
-        const min = Number(minRow?.value ?? 5);
-        const max = Number(maxRow?.value ?? 15);
-        let totalRevenue = 0;
-        for (let i = 0; i < days; i++) {
-          totalRevenue += min + Math.floor(Math.random() * (max - min + 1));
-        }
-        if (totalRevenue > 0) {
-          db.prepare(
-            'INSERT INTO transactions (date_dr, description, amount, category, notes) VALUES (?, ?, ?, ?, ?)'
-          ).run(date, `Tavern revenue (${days} day${days > 1 ? 's' : ''})`, totalRevenue, 'Tavern', `${min}–${max} gp/day`);
-        }
-      }
-    })();
-
+    db.prepare('UPDATE game_state SET value = ? WHERE key = ?').run(date, 'current_date');
     return { newDate: date, newDateFormatted: formatDateDR(date) };
   },
 
