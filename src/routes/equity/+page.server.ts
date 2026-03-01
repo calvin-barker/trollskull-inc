@@ -4,6 +4,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {
+  const currentDate = (db.prepare('SELECT value FROM game_state WHERE key = ?').get('current_date') as { value: string }).value;
   const shareholders = db.prepare('SELECT * FROM shareholders ORDER BY shares DESC').all() as Shareholder[];
 
   const totalShares = shareholders.reduce((s, sh) => s + sh.shares, 0);
@@ -19,6 +20,7 @@ export const load: PageServerLoad = () => {
   const nav = cash - outstandingDebt;
 
   return {
+    currentDate,
     shareholders: shareholders.map(sh => ({
       ...sh,
       pct: totalShares > 0 ? ((sh.shares / totalShares) * 100).toFixed(1) : '0.0',
@@ -78,11 +80,31 @@ export const actions: Actions = {
     const splits = distributeDividend(shareholders, totalAmount);
     db.transaction(() => {
       for (const split of splits) {
-        db.prepare('INSERT INTO transactions (date_dr, description, amount, category) VALUES (?, ?, ?, ?)').run(
-          date_dr, `Dividend to ${split.name}`, split.amount, 'Dividend'
+        db.prepare('INSERT INTO transactions (date_dr, description, amount, category, person) VALUES (?, ?, ?, ?, ?)').run(
+          date_dr, `Dividend to ${split.name}`, split.amount, 'Dividend', split.name
         );
       }
     })();
     return { success: true };
-  }
+  },
+
+  injectCapital: async ({ request }) => {
+    const form = await request.formData();
+    const shareholderId = Number(form.get('shareholder_id'));
+    const amount = Number(form.get('amount'));
+    const date_dr = String(form.get('date_dr') ?? '').trim();
+
+    if (!shareholderId || isNaN(amount) || amount <= 0 || !date_dr) {
+      return fail(400, { error: 'Shareholder, amount, and date required.' });
+    }
+
+    const shareholder = db.prepare('SELECT * FROM shareholders WHERE id = ?').get(shareholderId) as { id: number; name: string } | undefined;
+    if (!shareholder) return fail(400, { error: 'Shareholder not found.' });
+
+    db.prepare(
+      "INSERT INTO transactions (date_dr, description, amount, category, person) VALUES (?, ?, ?, ?, ?)"
+    ).run(date_dr, `Capital injection from ${shareholder.name}`, amount, "Owner's Equity", shareholder.name);
+
+    return { success: true };
+  },
 };

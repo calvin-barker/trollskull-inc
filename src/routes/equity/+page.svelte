@@ -43,7 +43,7 @@
     </table>
   </div>
 
-  <div class="grid grid-cols-3 gap-4">
+  <div class="grid grid-cols-2 gap-4">
     <!-- Add shareholder -->
     <div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
       <h3 class="text-sm font-semibold text-stone-300 mb-3">Add Shareholder</h3>
@@ -74,9 +74,22 @@
     <div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
       <h3 class="text-sm font-semibold text-stone-300 mb-3">Distribute Dividend</h3>
       <form method="POST" action="?/dividend" class="space-y-2">
-        <input name="date_dr" placeholder="YYYY-MM-DD" required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100" />
+        <input name="date_dr" value={data.currentDate} placeholder="YYYY-MM-DD" required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100" />
         <input name="amount" type="number" min="1" placeholder="Total (gp)" required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100" />
         <button class="w-full bg-stone-700 hover:bg-stone-600 py-1.5 rounded text-sm transition-colors">Distribute</button>
+      </form>
+    </div>
+
+    <!-- Inject Capital -->
+    <div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-stone-300 mb-3">Inject Capital</h3>
+      <form method="POST" action="?/injectCapital" class="space-y-2">
+        <select name="shareholder_id" class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100">
+          {#each data.shareholders as sh}<option value={sh.id}>{sh.name}</option>{/each}
+        </select>
+        <input name="date_dr" value={data.currentDate} placeholder="YYYY-MM-DD" required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100" />
+        <input name="amount" type="number" min="1" placeholder="Amount (gp)" required class="w-full bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm text-stone-100" />
+        <button class="w-full bg-emerald-700 hover:bg-emerald-600 text-stone-100 font-semibold py-1.5 rounded text-sm transition-colors">Inject Capital</button>
       </form>
     </div>
   </div>
