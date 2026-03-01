@@ -1,42 +1,38 @@
-# sv
+# Trollskull Inc.
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A local web app for managing Trollskull Manor's business operations during a *Waterdeep: Dragon Heist* D&D campaign. Displayed on a shared screen at the table — no deployment, no auth.
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## Setup
 
 ```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.12.4 create --template minimal --types ts --install npm .
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+Open [http://localhost:5173](http://localhost:5173).
 
-To create a production version of your app:
+## Commands
 
 ```sh
-npm run build
+make dev          # Start dev server
+make test         # Run tests
+make test-watch   # Tests in watch mode (for TDD)
+make check        # Type-check
+make build        # Production build
+make backup       # Back up the database
+make clean        # Reset database (re-created on next dev start)
 ```
 
-You can preview the production build with `npm run preview`.
+## What it does
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Tracks finances, equity, loans, assets, and hospitality for a player-run tavern using in-game Forgotten Realms dates.
+
+| Page | Purpose |
+|------|---------|
+| Dashboard | Current date, cash balance, advance time, recent activity |
+| Ledger | Full transaction log with filters |
+| Reports | P&L with depreciation and interest memos |
+| Equity | Shareholders, ownership %, NAV, dividends |
+| Loans | Amortization schedules, payment recording |
+| Assets | Capital asset register with straight-line depreciation |
+| Hospitality | Rooms, bookings, checkout, events |
