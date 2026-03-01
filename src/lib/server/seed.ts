@@ -147,6 +147,8 @@ export function clearAll(db: Database.Database) {
     // Re-insert defaults
     db.exec("INSERT INTO game_state (key, value) VALUES ('current_date', '1492-11-19')");
     db.exec("INSERT INTO game_state (key, value) VALUES ('full_moon_date', '1492-01-01')");
+    db.exec("INSERT INTO game_state (key, value) VALUES ('daily_revenue_min', '5')");
+    db.exec("INSERT INTO game_state (key, value) VALUES ('daily_revenue_max', '15')");
   });
 
   tx();

@@ -102,3 +102,5 @@ CREATE TABLE IF NOT EXISTS faction_postings (
 -- Seed initial state (idempotent)
 INSERT OR IGNORE INTO game_state (key, value) VALUES ('current_date', '1492-11-19');
 INSERT OR IGNORE INTO game_state (key, value) VALUES ('full_moon_date', '1492-01-01');
+INSERT OR IGNORE INTO game_state (key, value) VALUES ('daily_revenue_min', '5');
+INSERT OR IGNORE INTO game_state (key, value) VALUES ('daily_revenue_max', '15');
